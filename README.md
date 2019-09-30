@@ -17,14 +17,15 @@ All programming was done on Ubuntu 18.04.
 ## List of open tools used
 ### Development
 - Geany
-- g++
+- GCC/G++
 - SDL2
-- git  
+- Git  
 ### Sound
 - Musescore
 - Audacity  
 ### Graphics
-- Pinta  
+- Pinta
+- GIMP
   
 
 
