@@ -13,15 +13,15 @@ to use according to their respective licenses.
 All development was done on Ubuntu 18.04.
   
 
-##List of open tools used
-###Development
+## List of open tools used
+### Development
 - Geany
 - g++
 - SDL2  
-###Sound
+### Sound
 - Musescore
 - Audacity  
-###Graphics
+### Graphics
 - Pinta  
   
 
