@@ -20,8 +20,6 @@ All programming was done on Ubuntu 18.04.
 - g++
 - SDL2
 - git  
-###Sound
-- SDL2  
 ### Sound
 - Musescore
 - Audacity  
