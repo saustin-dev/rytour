@@ -1692,7 +1692,7 @@ int main()
 			if(fileResult==1)//new game
 			{
 				int introResult = introScene(window,renderer,event);
-				currentLevel=14;
+				currentLevel=1;
 				if(introResult == -1)
 				{
 					runProgram = 0;
