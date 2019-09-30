@@ -99,17 +99,18 @@ mapArray loadFile(mapArray values, string fileName)
 }
 
 //recursive flood fill
-//usually causes a segfault unless you divvy up the area yourself beforehand
-//handle with care
-mapArray changeNeighbors(mapArray input, int x, int y, bool checked[50][50])
+//doesn't flood all the way in order to prevent segfaults (caps at 400 tiles)
+mapArray changeNeighbors(mapArray input, int x, int y, int checked)
 {
-	if(checked[x][y] || input.map[x][y] != 0)
+	
+	int max = 400;
+	if(checked>max)
 	{
 		return input;
 	}
-
+	checked++;
+	//cout << to_string(checked) << endl;
 	input.map[x][y]=6;
-	checked[x][y]=1;
 	
 	if(x-1 >-1 && input.map[x-1][y] == 0)
 	{
@@ -289,8 +290,8 @@ int main(int argc, char *argv[])
 					newValue=17;
 					break;
 				case SDLK_l:
-					bool checked[50][50] = {0};
-					values = changeNeighbors(values,mouseX/squareSide,mouseY/squareSide,checked);
+
+					values = changeNeighbors(values,mouseX/squareSide,mouseY/squareSide,0);
 					break;
 			}
 			if(newValue!=-1)

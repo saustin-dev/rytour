@@ -802,6 +802,137 @@ int introScene(SDL_Window *window, SDL_Renderer *renderer,SDL_Event event)
 	return 0;
 }
 
+int outroScene(SDL_Window *window, SDL_Renderer *renderer,SDL_Event event)
+{
+	int lineCount = 9;
+	string linesOfText[lineCount] = {"Base entry - login successful", "","Objective Complete","","","-----------------------","","Congratulations!","[Press any key to exit the game]"};
+	int drawX = 10;
+	int drawY = 10;
+	TTF_Font *font = TTF_OpenFont("Assets/TTF/Ubuntu-R.ttf", 72);
+	SDL_Surface *surface;
+	SDL_Texture *texture;
+	Mix_Music *bgm = Mix_LoadMUS("Assets/Sound/Music/static.wav");
+	Mix_PlayMusic(bgm, -1);
+	Mix_Chunk *click = Mix_LoadWAV("Assets/Sound/SFX/click.wav");
+	if(font == NULL) return 0;
+	
+	//make screen black
+	SDL_RenderClear(renderer);
+	SDL_SetRenderDrawColor(renderer,0,0,0,255);
+	SDL_Rect rect;
+	rect.x = 0;
+	rect.y = 0;
+	rect.w = SCREEN_WIDTH;
+	rect.h = SCREEN_HEIGHT;
+	SDL_RenderFillRect(renderer, &rect);
+	
+	for(int currentLine = 0; currentLine < lineCount; currentLine++)
+	{
+		for(unsigned int currentIndex = 0; currentIndex < linesOfText[currentLine].length(); currentIndex++)
+		{
+			SDL_PollEvent(&event);
+			if(event.type == SDL_WINDOWEVENT)//window events
+			{
+				if(event.window.event == SDL_WINDOWEVENT_CLOSE)
+				{
+					TTF_CloseFont(font);
+					SDL_FreeSurface(surface);
+					SDL_DestroyTexture(texture);
+					Mix_FreeChunk(click);
+					Mix_FreeMusic(bgm);
+					return -1;
+				}
+			}
+			else if(event.type == SDL_KEYDOWN)
+			{
+				if(event.key.keysym.sym==SDLK_ESCAPE)
+				{
+					TTF_CloseFont(font);
+					SDL_FreeSurface(surface);
+					SDL_DestroyTexture(texture);
+					Mix_FreeChunk(click);
+					Mix_FreeMusic(bgm);
+					return 0;
+				}
+			}
+			
+			SDL_Rect rect = {drawX, drawY, 10,20};
+			SDL_Color color = {255,255,255};
+			char character[1];
+			character[0] = linesOfText[currentLine].c_str()[currentIndex];
+			surface = TTF_RenderText_Solid(font, character , color);
+			texture = SDL_CreateTextureFromSurface(renderer, surface);
+			SDL_RenderCopy(renderer,texture,NULL,&rect);
+			SDL_RenderPresent(renderer);
+			SDL_Delay(32);
+			drawX+=12;
+			Mix_PlayChannel(-1,click,0);
+		}
+		for(int i =0; i<60; i++)
+		{
+			SDL_PollEvent(&event);
+			if(event.type == SDL_WINDOWEVENT)//window events
+			{
+				if(event.window.event == SDL_WINDOWEVENT_CLOSE)
+				{
+					TTF_CloseFont(font);
+					SDL_FreeSurface(surface);
+					SDL_DestroyTexture(texture);
+					Mix_FreeChunk(click);
+					Mix_FreeMusic(bgm);
+					return -1;
+				}
+			}
+			else if(event.type == SDL_KEYDOWN)
+			{
+				if(event.key.keysym.sym==SDLK_ESCAPE)
+				{
+					TTF_CloseFont(font);
+					SDL_FreeSurface(surface);
+					SDL_DestroyTexture(texture);
+					Mix_FreeChunk(click);
+					Mix_FreeMusic(bgm);
+					return 0;
+				}
+			}
+			SDL_Delay(16);
+		}
+		drawX=10;
+		drawY+=40;
+	}
+	while(1)
+	{
+		SDL_PollEvent(&event);
+		if(event.type == SDL_WINDOWEVENT)//window events
+		{
+			if(event.window.event == SDL_WINDOWEVENT_CLOSE)
+			{
+				TTF_CloseFont(font);
+				SDL_FreeSurface(surface);
+				SDL_DestroyTexture(texture);
+				Mix_FreeChunk(click);
+				Mix_FreeMusic(bgm);
+				return -1;
+			}
+		}
+		else if(event.type == SDL_KEYDOWN)
+		{
+			TTF_CloseFont(font);
+			SDL_FreeSurface(surface);
+			SDL_DestroyTexture(texture);
+			Mix_FreeChunk(click);
+			Mix_FreeMusic(bgm);
+			return 0;
+		}
+	}
+	TTF_CloseFont(font);
+	SDL_FreeSurface(surface);
+	SDL_DestroyTexture(texture);
+	Mix_FreeChunk(click);
+	Mix_FreeMusic(bgm);
+	return 0;
+}
+
 struct levelMap
 {
 	string bgFilename;
@@ -1330,7 +1461,15 @@ gameplayReturn gameplay(SDL_Window *window, SDL_Renderer *renderer, SDL_Event ev
 		SDL_FreeSurface(buf);
 	}
 	//15 is start, 16 is flag, 17 is death
-	SDL_Surface *buf3 = IMG_Load("Assets/Art/World/flag.png");
+	SDL_Surface *buf3;
+	if(levelNumber==16)
+	{
+		buf3 = IMG_Load("Assets/Art/World/door.png");
+	}
+	else
+	{
+		buf3 = IMG_Load("Assets/Art/World/flag.png");
+	}
 	textures[16] = SDL_CreateTextureFromSurface(renderer,buf3);
 	SDL_FreeSurface(buf3);
 	buf3 = IMG_Load("Assets/Art/World/spike.png");
@@ -1515,6 +1654,10 @@ string songNameFromLevel(int levelNumber)
 	{
 		result = "Assets/Sound/Music/Jumping Looped.wav";
 	}
+	else
+	{
+		result = "Assets/Sound/Music/In Sight Looped.wav";
+	}
 	return result;
 }
 
@@ -1545,9 +1688,11 @@ int main()
 		}
 		else if (fileResult != 2)
 		{
+			int currentLevel = gameLevel;
 			if(fileResult==1)//new game
 			{
 				int introResult = introScene(window,renderer,event);
+				currentLevel=14;
 				if(introResult == -1)
 				{
 					runProgram = 0;
@@ -1555,14 +1700,22 @@ int main()
 				}
 			}
 			bool keepGaming = 1;
-			int currentLevel = gameLevel;
-			string levelSong = songNameFromLevel(gameLevel);
+			
+			string levelSong = songNameFromLevel(currentLevel);
 			Mix_Music *bgm = Mix_LoadMUS(levelSong.c_str());
 			Mix_PlayMusic(bgm, -1);
 			while(keepGaming)
 			{
 				//game stuff
 				int oldLevel = currentLevel;
+				if(currentLevel==17)
+				{
+					//do end stuff
+					outroScene(window,renderer,event);
+					runProgram=0;
+					remove("Data/playerdata.sav");
+					break;
+				}
 				gameplayReturn gameResult = gameplay(window, renderer, event,currentLevel);
 				currentLevel = gameResult.levelNumber;
 				if(currentLevel!=oldLevel)
