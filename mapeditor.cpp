@@ -98,6 +98,38 @@ mapArray loadFile(mapArray values, string fileName)
 	return values;
 }
 
+//recursive flood fill
+//usually causes a segfault unless you divvy up the area yourself beforehand
+//handle with care
+mapArray changeNeighbors(mapArray input, int x, int y, bool checked[50][50])
+{
+	if(checked[x][y] || input.map[x][y] != 0)
+	{
+		return input;
+	}
+
+	input.map[x][y]=6;
+	checked[x][y]=1;
+	
+	if(x-1 >-1 && input.map[x-1][y] == 0)
+	{
+		input = changeNeighbors(input,x-1,y,checked);
+	}
+	if(x+1 <50 && input.map[x+1][y] == 0)
+	{
+		input = changeNeighbors(input,x+1,y,checked);
+	}
+	if(y-1 >-1 && input.map[x][y-1] == 0)
+	{
+		input = changeNeighbors(input,x,y-1,checked);
+	}
+	if(y+1 <50 && input.map[x][y+1] == 0)
+	{
+		input = changeNeighbors(input,x,y+1,checked);
+	}
+	return input;
+}
+
 //TODO (all done)
 //-----
 //draw a 50x50 grid with side lengths of SCREEN_WIDTH/50
@@ -145,9 +177,9 @@ int main(int argc, char *argv[])
 	
 	
 	//load our tile textures
-	const int textureCount = 12;
+	const int textureCount = 18;
 	SDL_Texture *textures[textureCount];
-	for(int i = 1; i<textureCount; i++)
+	for(int i = 1; i<textureCount-2; i++)
 	{
 		//load moon textures (1 to 9) (0 is air)
 		string filename = "Assets/Art/World/moon";
@@ -157,10 +189,12 @@ int main(int argc, char *argv[])
 		SDL_FreeSurface(buf);
 	}
 	SDL_Surface *buf2 = IMG_Load("Assets/Art/Character/robotR.png");
-	textures[10] = SDL_CreateTextureFromSurface(renderer, buf2);
+	textures[15] = SDL_CreateTextureFromSurface(renderer, buf2);
 	SDL_FreeSurface(buf2);
 	buf2 = IMG_Load("Assets/Art/World/flag.png");
-	textures[11] = SDL_CreateTextureFromSurface(renderer, buf2);
+	textures[16] = SDL_CreateTextureFromSurface(renderer, buf2);
+	buf2 = IMG_Load("Assets/Art/World/spike.png");
+	textures[17] = SDL_CreateTextureFromSurface(renderer, buf2);
 	SDL_FreeSurface(buf2);
 	
 	bool shouldRun = 1;
@@ -230,11 +264,33 @@ int main(int argc, char *argv[])
 				case SDLK_9:
 					newValue=9;
 					break;
-				case SDLK_r:
+				case SDLK_q:
 					newValue=10;
 					break;
-				case SDLK_f:
+				case SDLK_w:
 					newValue=11;
+					break;
+				case SDLK_e:
+					newValue=12;
+					break;
+				case SDLK_r:
+					newValue=13;
+					break;
+				case SDLK_t:
+					newValue=14;
+					break;
+				case SDLK_s:
+					newValue=15;
+					break;
+				case SDLK_f:
+					newValue=16;
+					break;
+				case SDLK_y:
+					newValue=17;
+					break;
+				case SDLK_l:
+					bool checked[50][50] = {0};
+					values = changeNeighbors(values,mouseX/squareSide,mouseY/squareSide,checked);
 					break;
 			}
 			if(newValue!=-1)

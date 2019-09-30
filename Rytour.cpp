@@ -271,14 +271,17 @@ void drawButton(menuButton theButton, SDL_Renderer *renderer, bool widescreen)
 	}
 	//text
 	TTF_Font *font = TTF_OpenFont("Assets/TTF/Ubuntu-R.ttf", 72);
-	SDL_Color color = {255,255,255};
-	SDL_Surface *surface = TTF_RenderText_Solid(font, theButton.label.c_str(), color);
-	SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
-	SDL_Rect textRect = textSubBox(theButton);
-	SDL_RenderCopy(renderer, texture, NULL, &textRect);
-	TTF_CloseFont(font);
-	SDL_DestroyTexture(texture);
-	SDL_FreeSurface(surface);
+	if(font!=NULL)
+	{
+		SDL_Color color = {255,255,255};
+		SDL_Surface *surface = TTF_RenderText_Solid(font, theButton.label.c_str(), color);
+		TTF_CloseFont(font);
+		SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+		SDL_FreeSurface(surface);
+		SDL_Rect textRect = textSubBox(theButton);
+		SDL_RenderCopy(renderer, texture, NULL, &textRect);
+		SDL_DestroyTexture(texture);
+	}
 }
 
 int getResPos()
@@ -324,7 +327,7 @@ int mainMenu(SDL_Window *window, SDL_Renderer *renderer, SDL_Event event)
 	int wideY[3] = {720,900,1080};
 	
 	//begin music
-	Mix_Music *bgm = Mix_LoadMUS("Assets/Sound/Music/a_title_screen.wav");
+	Mix_Music *bgm = Mix_LoadMUS("Assets/Sound/Music/A Title Screen.wav");
 	Mix_Chunk *click = Mix_LoadWAV("Assets/Sound/SFX/click.wav");
 	Mix_Chunk *beep = Mix_LoadWAV("Assets/Sound/SFX/beep.wav");
 	Mix_PlayMusic(bgm, -1);
@@ -554,7 +557,7 @@ int fileMenu(SDL_Window *window, SDL_Renderer *renderer, SDL_Event event)
 	SDL_Surface *surface = IMG_Load("Assets/Art/UI/static.png");
 	SDL_Texture *bg = SDL_CreateTextureFromSurface(renderer, surface);
 	SDL_FreeSurface(surface);
-	Mix_Music *bgm = Mix_LoadMUS("Assets/Sound/Music/file_management.wav");
+	Mix_Music *bgm = Mix_LoadMUS("Assets/Sound/Music/File Management.wav");
 	Mix_Chunk *click = Mix_LoadWAV("Assets/Sound/SFX/click.wav");
 	Mix_Chunk *beep = Mix_LoadWAV("Assets/Sound/SFX/beep.wav");
 	Mix_PlayMusic(bgm, -1);
@@ -631,6 +634,10 @@ int fileMenu(SDL_Window *window, SDL_Renderer *renderer, SDL_Event event)
 		fread(&gameLevel,sizeof(int),1,save);
 		fclose(save);
 	}
+	else
+	{
+		gameLevel = 1;
+	}
 	return returnValue;
 }
 
@@ -664,6 +671,137 @@ void fadeBetweenImages(SDL_Renderer *renderer, string filename1, string filename
 	SDL_DestroyTexture(t2);
 }
 
+int introScene(SDL_Window *window, SDL_Renderer *renderer,SDL_Event event)
+{
+	int lineCount = 12;
+	string linesOfText[lineCount] = {"Current Date: September 30th, 2059","Last Login: December 17th, 2023","------------------","Solar Charge Complete - Current Battery 100%"," ","........................"," ", " ", "Objective : Return to Lunar Base"," "," ","[Press any key to continue]"};
+	int drawX = 10;
+	int drawY = 10;
+	TTF_Font *font = TTF_OpenFont("Assets/TTF/Ubuntu-R.ttf", 72);
+	SDL_Surface *surface;
+	SDL_Texture *texture;
+	Mix_Music *bgm = Mix_LoadMUS("Assets/Sound/Music/static.wav");
+	Mix_PlayMusic(bgm, -1);
+	Mix_Chunk *click = Mix_LoadWAV("Assets/Sound/SFX/click.wav");
+	if(font == NULL) return 0;
+	
+	//make screen black
+	SDL_RenderClear(renderer);
+	SDL_SetRenderDrawColor(renderer,0,0,0,255);
+	SDL_Rect rect;
+	rect.x = 0;
+	rect.y = 0;
+	rect.w = SCREEN_WIDTH;
+	rect.h = SCREEN_HEIGHT;
+	SDL_RenderFillRect(renderer, &rect);
+	
+	for(int currentLine = 0; currentLine < lineCount; currentLine++)
+	{
+		for(unsigned int currentIndex = 0; currentIndex < linesOfText[currentLine].length(); currentIndex++)
+		{
+			SDL_PollEvent(&event);
+			if(event.type == SDL_WINDOWEVENT)//window events
+			{
+				if(event.window.event == SDL_WINDOWEVENT_CLOSE)
+				{
+					TTF_CloseFont(font);
+					SDL_FreeSurface(surface);
+					SDL_DestroyTexture(texture);
+					Mix_FreeChunk(click);
+					Mix_FreeMusic(bgm);
+					return -1;
+				}
+			}
+			else if(event.type == SDL_KEYDOWN)
+			{
+				if(event.key.keysym.sym==SDLK_ESCAPE)
+				{
+					TTF_CloseFont(font);
+					SDL_FreeSurface(surface);
+					SDL_DestroyTexture(texture);
+					Mix_FreeChunk(click);
+					Mix_FreeMusic(bgm);
+					return 0;
+				}
+			}
+			
+			SDL_Rect rect = {drawX, drawY, 10,20};
+			SDL_Color color = {255,255,255};
+			char character[1];
+			character[0] = linesOfText[currentLine].c_str()[currentIndex];
+			surface = TTF_RenderText_Solid(font, character , color);
+			texture = SDL_CreateTextureFromSurface(renderer, surface);
+			SDL_RenderCopy(renderer,texture,NULL,&rect);
+			SDL_RenderPresent(renderer);
+			SDL_Delay(32);
+			drawX+=12;
+			Mix_PlayChannel(-1,click,0);
+		}
+		for(int i =0; i<60; i++)
+		{
+			SDL_PollEvent(&event);
+			if(event.type == SDL_WINDOWEVENT)//window events
+			{
+				if(event.window.event == SDL_WINDOWEVENT_CLOSE)
+				{
+					TTF_CloseFont(font);
+					SDL_FreeSurface(surface);
+					SDL_DestroyTexture(texture);
+					Mix_FreeChunk(click);
+					Mix_FreeMusic(bgm);
+					return -1;
+				}
+			}
+			else if(event.type == SDL_KEYDOWN)
+			{
+				if(event.key.keysym.sym==SDLK_ESCAPE)
+				{
+					TTF_CloseFont(font);
+					SDL_FreeSurface(surface);
+					SDL_DestroyTexture(texture);
+					Mix_FreeChunk(click);
+					Mix_FreeMusic(bgm);
+					return 0;
+				}
+			}
+			SDL_Delay(16);
+		}
+		drawX=10;
+		drawY+=40;
+	}
+	while(1)
+	{
+		SDL_PollEvent(&event);
+		if(event.type == SDL_WINDOWEVENT)//window events
+		{
+			if(event.window.event == SDL_WINDOWEVENT_CLOSE)
+			{
+				TTF_CloseFont(font);
+				SDL_FreeSurface(surface);
+				SDL_DestroyTexture(texture);
+				Mix_FreeChunk(click);
+				Mix_FreeMusic(bgm);
+				return -1;
+			}
+		}
+		else if(event.type == SDL_KEYDOWN)
+		{
+			TTF_CloseFont(font);
+			SDL_FreeSurface(surface);
+			SDL_DestroyTexture(texture);
+			Mix_FreeChunk(click);
+			Mix_FreeMusic(bgm);
+			return 0;
+		}
+	}
+	TTF_CloseFont(font);
+	SDL_FreeSurface(surface);
+	SDL_DestroyTexture(texture);
+	Mix_FreeChunk(click);
+	Mix_FreeMusic(bgm);
+	return 0;
+}
+
 struct levelMap
 {
 	string bgFilename;
@@ -674,7 +812,7 @@ struct levelMap
 		{
 			for(int j = 0; j < levelY; j++)
 			{
-				map[i][j]=2;
+				map[i][j]=0;
 			}
 		}
 	}
@@ -693,7 +831,7 @@ levelMap loadMap(int levelNumber)
 	
 	string readData[50][50]={"0"};
 	ifstream input(fileName.c_str());
-	
+	if(!input.good()) return result;
 	for(int y =0; y<50; y++)
 	{
 		for(int x =0; x<50; x++)
@@ -796,6 +934,25 @@ void drawMap(SDL_Renderer *renderer, levelMap map, SDL_Texture **tiles, movingEn
 		xPercent = xMaxPercent;
 	if(yPercent > yMaxPercent)
 		yPercent = yMaxPercent;
+	
+	if(cameraCenterX+SCREEN_WIDTH/2 > 50*squareSide)//if out of bounds would be shown
+	{
+		//xPercent must be set such that cameraCenterX + xPercent * SCREEN_WIDTH == 50*squareSide
+		//xPercent * SCREEN_WIDTH == 50*squareSide - cameraCenterX
+		//xPercent == (50*squareSide - cameraCenterX) / SCREEN_WIDTH
+		
+		
+		xPercent = 1.0f-(double)((double)(50*squareSide - cameraCenterX) / SCREEN_WIDTH);
+		if(xPercent < xMaxPercent)
+			xPercent = xMaxPercent;
+	}
+	if(cameraCenterY+SCREEN_HEIGHT/2 > 50*squareSide)
+	{
+		yPercent = 1.0f-(double)((double)(50*squareSide - cameraCenterY) / SCREEN_HEIGHT);
+		if(yPercent < yMaxPercent)
+			yPercent = yMaxPercent;
+	}
+	
 	offsetX = cameraCenterX - SCREEN_WIDTH * xPercent;
 	offsetY = cameraCenterY - SCREEN_HEIGHT * yPercent;
 	
@@ -832,7 +989,6 @@ movingEntity playerEnt(int xpos, int ypos)
 	return result;
 }
 
-
 //checks collision
 movingEntity checkCollision(movingEntity player, levelMap map, double deltaT)
 {
@@ -850,24 +1006,26 @@ movingEntity checkCollision(movingEntity player, levelMap map, double deltaT)
 		yIndex = checkY/squareSide;
 		if(xIndex <50 && xIndex >-1 && yIndex <50 && yIndex >-1)
 		{
-			if(map.map[xIndex][yIndex]>0 && map.map[xIndex][yIndex]!=11)
+			if(map.map[xIndex][yIndex]>0 && map.map[xIndex][yIndex]<16)
 			{
 				player.yvel = 0;
+				player.ypos+=3;
 			}
 		}
 		checkX = player.xpos+squareSide;
 		xIndex = checkX/squareSide;
 		if(xIndex <50 && xIndex >-1 && yIndex <50 && yIndex >-1)
 		{
-			if(map.map[xIndex][yIndex]>0 && map.map[xIndex][yIndex]!=11)
+			if(map.map[xIndex][yIndex]>0 && map.map[xIndex][yIndex]<16)
 			{
 				player.yvel = 0;
+				player.ypos+=3;
 			}
 		}
 	}
 	
 	//left
-	if(player.xvel < 0  && player.lastDir == 0)
+	if(player.xvel < 0  && abs(player.xacc)>10)//player.lastDir == 0)
 	{
 		checkX = player.xpos - extraPixels;
 		checkY = player.ypos;
@@ -875,25 +1033,27 @@ movingEntity checkCollision(movingEntity player, levelMap map, double deltaT)
 		yIndex = checkY/squareSide;
 		if(xIndex <50 && xIndex >-1 && yIndex <50 && yIndex >-1)
 		{
-			if(map.map[xIndex][yIndex]>0 && map.map[xIndex][yIndex]!=11)
+			if(map.map[xIndex][yIndex]>0 && map.map[xIndex][yIndex]<16)
 			{
 				player.xvel = 0;
+				player.xpos +=1;
 			}
 		}
 		checkY = player.ypos+squareSide;
 		xIndex = checkX/squareSide;
 		if(xIndex <50 && xIndex >-1 && yIndex <50 && yIndex >-1)
 		{
-			if(map.map[xIndex][yIndex]>0 && map.map[xIndex][yIndex]!=11)
+			if(map.map[xIndex][yIndex]>0 && map.map[xIndex][yIndex]<16)
 			{
 				player.xvel = 0;
+				player.xpos +=1;
 			}
 		}
 		
 	}
 	
 	//right
-	if(player.xvel > 0  && player.lastDir == 1)
+	if(player.xvel > 0  && abs(player.xacc)>10)//player.lastDir == 1)
 	{
 		checkX = player.xpos + squareSide + extraPixels;
 		checkY = player.ypos;
@@ -901,18 +1061,20 @@ movingEntity checkCollision(movingEntity player, levelMap map, double deltaT)
 		yIndex = checkY/squareSide;
 		if(xIndex <50 && xIndex >-1 && yIndex <50 && yIndex >-1)
 		{
-			if(map.map[xIndex][yIndex]>0 && map.map[xIndex][yIndex]!=11)
+			if(map.map[xIndex][yIndex]>0 && map.map[xIndex][yIndex]<16)
 			{
 				player.xvel = 0;
+				player.xpos -=1;
 			}
 		}
 		checkY = player.ypos+squareSide;
 		xIndex = checkX/squareSide;
 		if(xIndex <50 && xIndex >-1 && yIndex <50 && yIndex >-1)
 		{
-			if(map.map[xIndex][yIndex]>0 && map.map[xIndex][yIndex]!=11)
+			if(map.map[xIndex][yIndex]>0 && map.map[xIndex][yIndex]<16)
 			{
 				player.xvel = 0;
+				player.xpos -=1;
 			}
 		}
 	}
@@ -926,11 +1088,27 @@ bool checkForFlag(movingEntity player, levelMap map)
 	int yIndex = (player.ypos+squareSide/2) / squareSide;
 	if(xIndex>-1&&xIndex<50&&yIndex>-1&&yIndex<50)
 	{
-		if(map.map[xIndex][yIndex]==11)
+		if(map.map[xIndex][yIndex]==16)
 		{
 			return 1;
 		}
 	}
+	return 0;
+}
+
+bool checkForDeath(movingEntity player, levelMap map)
+{
+	int xIndex = (player.xpos+squareSide/2) / squareSide;
+	int yIndex = (player.ypos+squareSide/2) / squareSide;
+	if(xIndex>-1&&xIndex<50&&yIndex>-1&&yIndex<50)
+	{
+		if(map.map[xIndex][yIndex]==17)
+		{
+			return 1;
+		}
+	}
+	if(player.ypos > squareSide*51)
+		return 1;
 	return 0;
 }
 
@@ -945,7 +1123,7 @@ bool isGrounded(movingEntity player, levelMap map)
 	{
 		return result;
 	}
-	if(map.map[feetPosX/squareSide][feetPosY/squareSide]!=0 && map.map[feetPosX/squareSide][feetPosY/squareSide]!=11 )
+	if(map.map[feetPosX/squareSide][feetPosY/squareSide]!=0 && map.map[feetPosX/squareSide][feetPosY/squareSide]<16 )
 	{
 		return 1;
 	}
@@ -954,7 +1132,7 @@ bool isGrounded(movingEntity player, levelMap map)
 	{
 		return result;
 	}
-	if(map.map[feetPosX/squareSide][feetPosY/squareSide]!=0  && map.map[feetPosX/squareSide][feetPosY/squareSide]!=11 )
+	if(map.map[feetPosX/squareSide][feetPosY/squareSide]!=0  && map.map[feetPosX/squareSide][feetPosY/squareSide]<16 )
 	{
 		return 1;
 	}
@@ -1019,7 +1197,7 @@ movingEntity getStartPos(movingEntity player, levelMap map)
 	{
 		for(int x = 0; x<50; x++)
 		{
-			if(map.map[x][y]==10)
+			if(map.map[x][y]==15)
 			{
 				player.xpos=x*squareSide;
 				player.ypos=y*squareSide;
@@ -1035,7 +1213,7 @@ levelMap removeStartPoint(levelMap map)
 	{
 		for(int x = 0; x<50; x++)
 		{
-			if(map.map[x][y]==10)
+			if(map.map[x][y]==15)
 			{
 				map.map[x][y]=0;
 			}
@@ -1130,22 +1308,33 @@ int pauseMenu(SDL_Window *window, SDL_Renderer *renderer, SDL_Event event, SDL_T
 	return returnValue;
 }
 
-int gameplay(SDL_Window *window, SDL_Renderer *renderer, SDL_Event event, int levelNumber)
+struct gameplayReturn
+{
+	int levelNumber;
+	int returnValue;
+};
+
+gameplayReturn gameplay(SDL_Window *window, SDL_Renderer *renderer, SDL_Event event, int levelNumber)
 {
 	int returnValue = -1;
 	//load textures
-	SDL_Texture *textures[12];
-	for(int i = 1; i<10; i++)
+	int textureCount = 18;
+	SDL_Texture *textures[textureCount];
+	for(int i = 1; i<textureCount-2; i++)
 	{
-		//load moon textures (1 to 9) (0 is air)
+		//load moon textures (1 to 14) (0 is air)
 		string filename = "Assets/Art/World/moon";
 		filename+=to_string(i)+".png";
 		SDL_Surface *buf = IMG_Load(filename.c_str());
 		textures[i] = SDL_CreateTextureFromSurface(renderer, buf);
 		SDL_FreeSurface(buf);
 	}
+	//15 is start, 16 is flag, 17 is death
 	SDL_Surface *buf3 = IMG_Load("Assets/Art/World/flag.png");
-	textures[11] = SDL_CreateTextureFromSurface(renderer,buf3);
+	textures[16] = SDL_CreateTextureFromSurface(renderer,buf3);
+	SDL_FreeSurface(buf3);
+	buf3 = IMG_Load("Assets/Art/World/spike.png");
+	textures[17] = SDL_CreateTextureFromSurface(renderer,buf3);
 	SDL_FreeSurface(buf3);
 	//load player textures
 	SDL_Texture *playerSprites[4];
@@ -1191,6 +1380,7 @@ int gameplay(SDL_Window *window, SDL_Renderer *renderer, SDL_Event event, int le
 		lastTime = newTime;
 		
 		//check if need to load level
+		if(checkForDeath(testPlayer,testMap)) shouldReset=1;
 		if (checkForFlag(testPlayer,testMap)) loadNext=1;
 		if (shouldReset)
 		{
@@ -1200,7 +1390,7 @@ int gameplay(SDL_Window *window, SDL_Renderer *renderer, SDL_Event event, int le
 		if (loadNext)
 		{
 			levelNumber++;
-			returnValue = levelNumber+10;
+			returnValue = 0;
 		}
 		
 		//draw graphics
@@ -1256,7 +1446,9 @@ int gameplay(SDL_Window *window, SDL_Renderer *renderer, SDL_Event event, int le
 						//do menu things
 						int menuResult = pauseMenu(window,renderer,event,bgTex);
 						if(menuResult==1)
+						{
 							returnValue=-3;
+						}
 						menuTime = SDL_GetTicks()-menuTime;
 						lastTime+=menuTime;
 						lastPauseTime = SDL_GetTicks();
@@ -1293,7 +1485,7 @@ int gameplay(SDL_Window *window, SDL_Renderer *renderer, SDL_Event event, int le
 		}
 	}
 	//to do: destroy textures
-	for(int i =1; i<12; i++)
+	for(int i =1; i<17; i++)
 	{
 		SDL_DestroyTexture(textures[i]);
 	}
@@ -1302,7 +1494,28 @@ int gameplay(SDL_Window *window, SDL_Renderer *renderer, SDL_Event event, int le
 		SDL_DestroyTexture(playerSprites[i]);
 	}
 	SDL_DestroyTexture(bgTex);
-	return returnValue;
+	gameplayReturn result;
+	result.returnValue = returnValue;
+	result.levelNumber = levelNumber;
+	return result;
+}
+
+string songNameFromLevel(int levelNumber)
+{
+	string result = "";
+	if(levelNumber<=5)
+	{
+		result = "Assets/Sound/Music/Awakening Looped.wav";
+	}
+	else if(levelNumber<=10)
+	{
+		result = "Assets/Sound/Music/Setting Out Looped.wav";
+	}
+	else if(levelNumber<=15)
+	{
+		result = "Assets/Sound/Music/Jumping Looped.wav";
+	}
+	return result;
 }
 
 int main()
@@ -1332,30 +1545,57 @@ int main()
 		}
 		else if (fileResult != 2)
 		{
+			if(fileResult==1)//new game
+			{
+				int introResult = introScene(window,renderer,event);
+				if(introResult == -1)
+				{
+					runProgram = 0;
+					break;
+				}
+			}
 			bool keepGaming = 1;
 			int currentLevel = gameLevel;
+			string levelSong = songNameFromLevel(gameLevel);
+			Mix_Music *bgm = Mix_LoadMUS(levelSong.c_str());
+			Mix_PlayMusic(bgm, -1);
 			while(keepGaming)
 			{
 				//game stuff
-				int gameResult = gameplay(window, renderer, event,currentLevel);
-				if(gameResult == -2)
+				int oldLevel = currentLevel;
+				gameplayReturn gameResult = gameplay(window, renderer, event,currentLevel);
+				currentLevel = gameResult.levelNumber;
+				if(currentLevel!=oldLevel)
+				{
+					//check if new music
+					levelSong = songNameFromLevel(oldLevel);
+					string newLevelSong = songNameFromLevel(currentLevel);
+					if(newLevelSong != levelSong)
+					{
+						bgm = Mix_LoadMUS(newLevelSong.c_str());
+						Mix_PlayMusic(bgm, -1);
+					}
+				}
+				if(gameResult.returnValue == -2)
 				{
 					runProgram=0;
 					break;
 				}
-				else if(gameResult == -3)
+				else if(gameResult.returnValue == -3)
 				{
 					break;
 				}
-				else if(gameResult >= 10)
+				else if(gameResult.returnValue == 0)
 				{
-					currentLevel = gameResult-10;
-					remove("Data/playerdata.sav");
-					FILE *save = fopen("Data/playerdata.sav","w");
-					fwrite(&currentLevel,sizeof(int),1,save);
-					fclose(save);
+					
 				}
+				remove("Data/playerdata.sav");
+				FILE *save = fopen("Data/playerdata.sav","w");
+				fwrite(&currentLevel,sizeof(int),1,save);
+				fclose(save);
 			}
+			Mix_HaltMusic();
+			Mix_FreeMusic(bgm);
 		}
 		
 		fadeBetweenImages(renderer,"Assets/Art/UI/static.png","Assets/Art/UI/menu bg.png");
