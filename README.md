@@ -14,16 +14,20 @@ Lastly, the included font, Ubuntu, is licensed under the Ubuntu Font License.
 All programming was done on Ubuntu 18.04.
   
 
-##List of open tools used
-###Development
+## List of open tools used
+### Development
 - Geany
 - g++
+<<<<<<< HEAD
 - SDL2
 - git  
 ###Sound
+=======
+- SDL2  
+### Sound
 - Musescore
 - Audacity  
-###Graphics
+### Graphics
 - Pinta  
   
 
